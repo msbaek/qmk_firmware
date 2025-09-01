@@ -12,7 +12,7 @@
 #define TAPPING_TERM_PER_KEY                // 키별 개별 설정 활성화
 #define PERMISSIVE_HOLD                     // 다른 키와 함께 누르면 hold로 인식
 #define HOLD_ON_OTHER_KEY_PRESS             // 다른 키 누르면 즉시 hold 처리
-// #define QUICK_TAP_TERM 120                  // 빠른 연속 탭 지원
+#define QUICK_TAP_TERM 120                  // 빠른 연속 탭 지원
 
 // ===== macOS 특화 설정 =====
 // #define GRAVE_ESC_ALT_OVERRIDE              // Alt 키 우선순위 설정
@@ -23,9 +23,9 @@
 // NKRO는 이미 NKRO_DEFAULT_ON true로 활성화됨
 
 // ===== KC_LALT 문제 해결을 위한 추가 설정 =====
-// #define TAPPING_FORCE_HOLD              // 홀드된 키가 있을 때 다른 Mod-Tap의 탭 무시
-// #define RETRO_TAPPING                   // 홀드 후 단독 릴리즈 시 탭 처리
-// #define BILATERAL_COMBINATIONS          // 양쪽 modifier 키 조합 개선
+#define TAPPING_FORCE_HOLD                  // 홀드된 키가 있을 때 다른 Mod-Tap의 탭 무시
+#define RETRO_TAPPING                       // 홀드 후 단독 릴리즈 시 탭 처리
+#define BILATERAL_COMBINATIONS              // 양쪽 modifier 키 조합 개선
 
 // ===== One Shot Modifier 설정 =====
 // #define ONESHOT_TIMEOUT 3000            // One Shot Modifier 타임아웃 (3초)
