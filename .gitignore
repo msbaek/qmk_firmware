@@ -121,3 +121,8 @@ compile_commands.json
 via*.json
 /keyboards/**/keymaps/via/*
 /keyboards/**/keymaps/vial/*
+
+# keebio/iris/keymaps/via 디렉토리는 예외로 관리
+!/keyboards/keebio/iris/keymaps/via/
+!/keyboards/keebio/iris/keymaps/via/*
+
