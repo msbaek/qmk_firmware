@@ -23,7 +23,8 @@
 // NKRO는 이미 NKRO_DEFAULT_ON true로 활성화됨
 
 // ===== KC_LALT 문제 해결을 위한 추가 설정 =====
-#define TAPPING_FORCE_HOLD                  // 홀드된 키가 있을 때 다른 Mod-Tap의 탭 무시
+// #define TAPPING_FORCE_HOLD               // Cmd+Click 문제 원인으로 주석 처리
+// #define IGNORE_MOD_TAP_INTERRUPT         // QMK 최신 버전에서는 기본 동작이므로 제거
 #define RETRO_TAPPING                       // 홀드 후 단독 릴리즈 시 탭 처리
 #define BILATERAL_COMBINATIONS              // 양쪽 modifier 키 조합 개선
 

@@ -82,13 +82,47 @@ uint16_t get_quick_tap_term(uint16_t keycode, keyrecord_t *record) {
     }
 }
 
+// ===== Mod-Tap 세밀 제어 =====
+bool get_hold_on_other_key_press(uint16_t keycode, keyrecord_t *record) {
+    switch (keycode) {
+        case MT(MOD_LGUI, KC_ENT):
+            // Cmd+Enter 키는 다른 키와 함께 눌렀을 때만 hold로 처리
+            // 마우스 클릭 후 단독으로 눌렀을 때는 tap으로 처리하지 않음
+            return true;  // 항상 hold 우선
+        case MT(MOD_RALT, KC_F18):
+            return true;  // Alt/F18도 hold 우선
+        default:
+            return false;
+    }
+}
+
 // ===== Alt+화살표 조합 우선순위 해결 =====
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
-    // Alt 키와 Shift 키 상태 추적
+    // Modifier 키 상태 추적
     static bool alt_held = false;
     static bool shift_held = false;
+    static uint32_t cmd_press_time = 0;
     
     switch (keycode) {
+        case MT(MOD_LGUI, KC_ENT):
+            // Cmd/Enter 키 특별 처리
+            if (record->event.pressed) {
+                cmd_press_time = record->event.time;
+                register_code(KC_LGUI);
+                return false;  // QMK의 기본 MT 처리 건너뛰기
+            } else {
+                unregister_code(KC_LGUI);
+                
+                // 짧게 눌렀고 마우스 클릭이 없었다면 Enter 처리
+                // 하지만 Cmd가 활성화된 상태에서는 Enter를 보내지 않음
+                uint32_t hold_time = record->event.time - cmd_press_time;
+                if (hold_time < TAPPING_TERM && !(get_mods() & MOD_MASK_GUI)) {
+                    tap_code(KC_ENT);
+                }
+                return false;
+            }
+            break;
+            
         case KC_LALT:
             if (record->event.pressed) {
                 alt_held = true;
