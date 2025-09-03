@@ -12,7 +12,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         //├────────┼────────┼────────┼────────┼────────┼────────┼────────┐        ┌────────┼────────┼────────┼────────┼────────┼────────┼────────┤
            KC_LSFT,  KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,    KC_DEL,           KC_LGUI, KC_N,    KC_M,    KC_COMM, KC_DOT,  KC_SLSH, KC_RSFT,
         //└────────┴────────┴────────┴───┬────┴───┬────┴───┬────┴───┬────┘        └───┬────┴───┬────┴───┬────┴───┬────┴────────┴────────┴────────┘
-                                            KC_LALT,  MO(1),   MT(MOD_LGUI,KC_ENT),       KC_SPC,  LT(2,KC_BSPC), MT(MOD_RALT, KC_F18)
+                                            KC_LALT,  MO(1),   MT(MOD_LGUI,KC_ENT),       MT(MOD_LALT, KC_SPC),  LT(2,KC_BSPC), MT(MOD_RALT, KC_F18)
                                         //└────────┴────────┴────────┘                 └────────┴────────┴────────┘
     ),
 
@@ -101,8 +101,9 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     // Modifier 키 상태 추적
     static bool alt_held = false;
     static bool shift_held = false;
+    static bool cmd_held = false;  // 물리적 Cmd 키 상태 추적
     static uint32_t cmd_press_time = 0;
-    
+
     switch (keycode) {
         case MT(MOD_LGUI, KC_ENT):
             // Cmd/Enter 키 특별 처리
@@ -112,7 +113,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 return false;  // QMK의 기본 MT 처리 건너뛰기
             } else {
                 unregister_code(KC_LGUI);
-                
+
                 // 짧게 눌렀고 마우스 클릭이 없었다면 Enter 처리
                 // 하지만 Cmd가 활성화된 상태에서는 Enter를 보내지 않음
                 uint32_t hold_time = record->event.time - cmd_press_time;
@@ -122,7 +123,30 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 return false;
             }
             break;
-            
+
+        case KC_LGUI:
+            // Left Command 키 처리
+            if (record->event.pressed) {
+                cmd_held = true;
+                // 중복 등록 방지
+                if (!(get_mods() & MOD_BIT(KC_LGUI))) {
+                    register_code(KC_LGUI);
+                }
+                return false;
+            } else {
+                // Alt+Cmd 조합 중에는 절대 Cmd를 해제하지 않음
+                if (alt_held) {
+                    // 물리적으로는 해제되었지만 논리적으로는 유지
+                    cmd_held = false;
+                    return false;  // Cmd 해제 차단
+                } else {
+                    cmd_held = false;
+                    unregister_code(KC_LGUI);
+                    return false;
+                }
+            }
+            break;
+
         case KC_LALT:
             if (record->event.pressed) {
                 alt_held = true;
@@ -130,11 +154,16 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 return false;  // QMK 기본 처리 스킵하여 더 확실한 Alt 등록
             } else {
                 alt_held = false;
+                // Alt 해제 시 지연된 Cmd도 함께 해제
                 unregister_code(KC_LALT);
+                // Cmd가 물리적으로 해제되었고 Alt도 해제되면 Cmd도 해제
+                if ((get_mods() & MOD_BIT(KC_LGUI)) && !cmd_held) {
+                    unregister_code(KC_LGUI);
+                }
                 return false;
             }
             break;
-            
+
         case KC_LSFT:
             // 왼쪽 Shift만 추적 (왼쪽 Alt와 함께 사용되므로)
             if (record->event.pressed) {
@@ -145,7 +174,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             // 왼쪽 Shift는 정상 처리하되 상태만 추적
             return true;
             break;
-            
+
         case KC_TAB:
             // Alt + Shift + Tab 조합 가로채기 (clear_keyboard 사용 안 함)
             if (alt_held && shift_held) {
@@ -162,7 +191,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             }
             // Alt 없이 Tab만 눌렀을 때는 정상 처리
             break;
-            
+
         case KC_Z:
             // Alt + Shift + Z 조합 처리
             if (alt_held && shift_held) {
@@ -176,39 +205,30 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 return false;
             }
             break;
-            
-        // 화살표 키들 - Alt가 눌려있으면 GUI 키 차단하고 Alt+Arrow만 전송
+
+        // 화살표 키들 - Alt+Cmd 조합 처리
         case KC_UP:
         case KC_DOWN:
         case KC_LEFT:
         case KC_RIGHT:
             if (alt_held) {
                 if (record->event.pressed) {
-                    // GUI 키가 눌려있는지 확인 (MT 키 홀드 포함)
-                    bool gui_was_held = get_mods() & MOD_BIT(KC_LGUI);
-                    
-                    // GUI 키를 임시로 해제하여 macOS의 Cmd+Arrow 우선순위 차단
-                    if (gui_was_held) {
-                        unregister_code(KC_LGUI);
-                    }
-                    
-                    // Alt + Arrow 조합만 전송
+                    // Alt+Cmd+Arrow 조합: 두 modifier 모두 확실히 적용
                     register_code(KC_LALT);
-                    register_code(keycode);
-                    
-                    // GUI 키를 다시 복원 (Cmd+Tab 등 다른 조합을 위해)
-                    if (gui_was_held) {
+                    if (get_mods() & MOD_BIT(KC_LGUI)) {
+                        // Cmd도 같이 눌려있으면 Alt+Cmd+Arrow 조합
                         register_code(KC_LGUI);
                     }
+                    register_code(keycode);
                 } else {
                     unregister_code(keycode);
-                    // modifier 상태는 물리적 키에 따라 유지
+                    // modifier들은 물리적 키 상태에 따라 유지
                 }
-                return false;  // macOS의 Cmd+화살표 우선순위 완전 차단
+                return false;  // macOS 기본 동작 차단
             }
             break;
     }
-    
+
     return true;  // 다른 키들은 정상 처리
 }
 
