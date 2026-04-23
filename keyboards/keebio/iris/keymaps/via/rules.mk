@@ -4,13 +4,11 @@ VIA_ENABLE = yes
 # 펌웨어 크기 최적화
 LTO_ENABLE = yes
 
-EXTRAKEY_ENABLE = yes          # Audio control and System control
-
-# Modifier 조합 개선을 위한 기능들
+# 기능 활성화
 BOOTMAGIC_ENABLE = yes      # 부트매직
 MOUSEKEY_ENABLE = yes       # 마우스 키
-EXTRAKEY_ENABLE = yes       # 미디어 컨트롤
-NKRO_ENABLE = yes          # N-Key Rollover (필수)
+EXTRAKEY_ENABLE = yes       # 미디어 컨트롤 / 시스템 컨트롤
+NKRO_ENABLE = yes           # N-Key Rollover
 
 # USB 성능 최적화
 CONSOLE_ENABLE = no         # 콘솔 비활성화 (성능 향상)
