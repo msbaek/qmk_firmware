@@ -56,6 +56,12 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     )
 };
 
+// ===== Combos =====
+const uint16_t PROGMEM ji_combo[] = {KC_J, KC_I, COMBO_END};
+combo_t key_combos[] = {
+    COMBO(ji_combo, LALT(KC_ENT)),  // J + I 동시 누름 → Opt(Alt) + Enter
+};
+
 // ===== Per-Key Tapping Term 설정 =====
 uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *record) {
     switch (keycode) {
@@ -63,38 +69,15 @@ uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *record) {
             return 150;  // Enter/Cmd는 더 빠르게
         case LT(2, KC_BSPC):
             return 180;  // Layer tap은 약간 더 여유있게
-        case MT(MOD_RALT, KC_F18):
-            return 160;  // Tab/F18도 빠르게
         default:
             return TAPPING_TERM;
     }
 }
 
-// ===== Quick Tap Term 설정 =====
-uint16_t get_quick_tap_term(uint16_t keycode, keyrecord_t *record) {
-    switch (keycode) {
-        case MT(MOD_LGUI, KC_ENT):
-            return QUICK_TAP_TERM;
-        case MT(MOD_RALT, KC_F18):
-            return QUICK_TAP_TERM;
-        default:
-            return 0;  // 다른 키는 quick tap 비활성화
-    }
-}
-
-// ===== Mod-Tap 세밀 제어 =====
-bool get_hold_on_other_key_press(uint16_t keycode, keyrecord_t *record) {
-    switch (keycode) {
-        case MT(MOD_LGUI, KC_ENT):
-            // Cmd+Enter 키는 다른 키와 함께 눌렀을 때만 hold로 처리
-            // 마우스 클릭 후 단독으로 눌렀을 때는 tap으로 처리하지 않음
-            return true;  // 항상 hold 우선
-        case MT(MOD_RALT, KC_F18):
-            return true;  // Alt/F18도 hold 우선
-        default:
-            return false;
-    }
-}
+// NOTE: get_quick_tap_term / get_hold_on_other_key_press callbacks were removed.
+// Their *_PER_KEY gate macros aren't defined, so QMK never called them (dead code).
+// The global QUICK_TAP_TERM(120) / HOLD_ON_OTHER_KEY_PRESS in config.h already
+// apply to every key, so removing these does not change behavior.
 
 // ===== Alt+화살표 조합 우선순위 해결 =====
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
